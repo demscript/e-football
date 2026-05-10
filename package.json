@@ -29,6 +29,7 @@
     "react": "^19.0.0",
     "react-confetti": "^6.1.0",
     "react-dom": "^19.0.0",
+    "@hookform/resolvers": "^3.9.1",
     "react-hook-form": "^7.54.1",
     "react-hot-toast": "^2.4.1",
     "react-zoom-pan-pinch": "^3.6.1",
@@ -37,7 +38,6 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
-    "@hookform/resolvers": "^3.9.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22",
     "@types/react": "^19",
