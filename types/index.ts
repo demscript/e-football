@@ -6,7 +6,7 @@ import type {
   Incident,
   AuditLog,
   User,
-} from "@prisma/client";
+} from "@/generated/prisma";
 
 // Extended types with relations
 export type PlayerWithMatches = Player & {
@@ -77,4 +77,4 @@ export interface TournamentUpdatedEvent {
 }
 
 // Re-export Prisma types for convenience
-export type { Player, Tournament, Match, Round, Incident, AuditLog, User };
+export type { Player, Tournament, Match, Round, Incident, AuditLog, User } from "@/generated/prisma";
