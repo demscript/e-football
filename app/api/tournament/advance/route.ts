@@ -22,11 +22,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
-    await pusherServer.trigger(CHANNELS.TOURNAMENT, EVENTS.ROUND_ADVANCED, {
-      tournament,
-      result,
-    });
+    try {
+      const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
+      await pusherServer.trigger(CHANNELS.TOURNAMENT, EVENTS.ROUND_ADVANCED, {
+        tournament,
+        result,
+      });
+    } catch {
+      // Pusher failure must not block the response
+    }
 
     return NextResponse.json({ data: result });
   } catch (err) {

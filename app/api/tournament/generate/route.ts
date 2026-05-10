@@ -27,14 +27,18 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Broadcast
-    const tournament = await prisma.tournament.findUnique({
-      where: { id: tournamentId },
-    });
-    await pusherServer.trigger(CHANNELS.TOURNAMENT, EVENTS.BRACKET_GENERATED, {
-      tournament,
-      round: result.round,
-    });
+    // Broadcast (non-fatal if Pusher not configured)
+    try {
+      const tournament = await prisma.tournament.findUnique({
+        where: { id: tournamentId },
+      });
+      await pusherServer.trigger(CHANNELS.TOURNAMENT, EVENTS.BRACKET_GENERATED, {
+        tournament,
+        round: result.round,
+      });
+    } catch {
+      // Pusher failure must not block the response
+    }
 
     return NextResponse.json({ data: result, message: "Bracket generated!" });
   } catch (err) {

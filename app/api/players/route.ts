@@ -78,12 +78,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Broadcast to realtime
-    const totalCount = await prisma.player.count({ where: { status: "APPROVED" } });
-    await pusherServer.trigger(CHANNELS.PLAYERS, EVENTS.PLAYER_REGISTERED, {
-      player,
-      totalCount,
-    });
+    // Broadcast to realtime (non-fatal if Pusher not configured)
+    try {
+      const totalCount = await prisma.player.count({ where: { status: "APPROVED" } });
+      await pusherServer.trigger(CHANNELS.PLAYERS, EVENTS.PLAYER_REGISTERED, {
+        player,
+        totalCount,
+      });
+    } catch {
+      // Pusher failure must not block registration
+    }
 
     return NextResponse.json({ data: player }, { status: 201 });
   } catch (err) {

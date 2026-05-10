@@ -33,20 +33,23 @@ export async function PATCH(
       },
     });
 
-    // Broadcast realtime update
-    const fullMatch = await prisma.match.findUnique({
-      where: { id },
-      include: {
-        player1: true,
-        player2: true,
-        winner: true,
-        round: true,
-      },
-    });
-
-    await pusherServer.trigger(CHANNELS.MATCHES, EVENTS.MATCH_UPDATED, {
-      match: fullMatch,
-    });
+    // Broadcast realtime update (non-fatal if Pusher not configured)
+    try {
+      const fullMatch = await prisma.match.findUnique({
+        where: { id },
+        include: {
+          player1: true,
+          player2: true,
+          winner: true,
+          round: true,
+        },
+      });
+      await pusherServer.trigger(CHANNELS.MATCHES, EVENTS.MATCH_UPDATED, {
+        match: fullMatch,
+      });
+    } catch {
+      // Pusher failure must not block the response
+    }
 
     return NextResponse.json({ data: match });
   } catch (err) {

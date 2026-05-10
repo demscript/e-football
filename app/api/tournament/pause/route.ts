@@ -27,9 +27,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    await pusherServer.trigger(CHANNELS.TOURNAMENT, EVENTS.TOURNAMENT_UPDATED, {
-      tournament: updated,
-    });
+    try {
+      await pusherServer.trigger(CHANNELS.TOURNAMENT, EVENTS.TOURNAMENT_UPDATED, {
+        tournament: updated,
+      });
+    } catch {
+      // Pusher failure must not block the response
+    }
 
     return NextResponse.json({ data: updated });
   } catch {

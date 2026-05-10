@@ -41,21 +41,24 @@ export async function PATCH(
       },
     });
 
-    // Broadcast status changes
+    // Broadcast status changes (non-fatal if Pusher not configured)
     if (status) {
-      await pusherServer.trigger(CHANNELS.PLAYERS, EVENTS.PLAYER_STATUS_CHANGED, {
-        playerId: id,
-        status,
-        player,
-      });
-
-      // Update player count if approved
-      if (status === "APPROVED") {
-        const totalCount = await prisma.player.count({ where: { status: "APPROVED" } });
-        await pusherServer.trigger(CHANNELS.PLAYERS, EVENTS.PLAYER_REGISTERED, {
+      try {
+        await pusherServer.trigger(CHANNELS.PLAYERS, EVENTS.PLAYER_STATUS_CHANGED, {
+          playerId: id,
+          status,
           player,
-          totalCount,
         });
+
+        if (status === "APPROVED") {
+          const totalCount = await prisma.player.count({ where: { status: "APPROVED" } });
+          await pusherServer.trigger(CHANNELS.PLAYERS, EVENTS.PLAYER_REGISTERED, {
+            player,
+            totalCount,
+          });
+        }
+      } catch {
+        // Pusher failure must not block the response
       }
     }
 
