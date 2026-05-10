@@ -62,9 +62,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate player ID
-    const count = await prisma.player.count();
-    const playerId = generatePlayerId(count + 1);
+    // Generate player ID from highest existing ID to avoid collisions
+    const lastPlayer = await prisma.player.findFirst({
+      orderBy: { playerId: "desc" },
+      select: { playerId: true },
+    });
+    let nextNum = 1;
+    if (lastPlayer) {
+      const match = lastPlayer.playerId.match(/EFB-(\d+)/);
+      if (match) nextNum = parseInt(match[1], 10) + 1;
+    }
+    const playerId = generatePlayerId(nextNum);
 
     const player = await prisma.player.create({
       data: {
@@ -97,8 +105,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("[players POST]", message);
-    return NextResponse.json({ error: "Registration failed", detail: message }, { status: 500 });
+    console.error("[players POST]", err);
+    return NextResponse.json({ error: "Registration failed" }, { status: 500 });
   }
 }
