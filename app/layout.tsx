@@ -3,12 +3,12 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "eFootball City Cup 2025 | Local Gaming Tournament",
+  title: "eFootball City Cup 2026 | Local Gaming Tournament",
   description:
     "Join the biggest eFootball community tournament in the city. Compete, win prizes, and prove you're the best. Registration open now.",
   keywords: ["eFootball", "tournament", "gaming", "esports", "Nigeria", "local", "prizes"],
   openGraph: {
-    title: "eFootball City Cup 2025",
+    title: "eFootball City Cup 2026",
     description: "Win ₦10,000 in the ultimate eFootball community tournament!",
     type: "website",
   },

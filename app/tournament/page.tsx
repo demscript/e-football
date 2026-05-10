@@ -95,7 +95,7 @@ export default async function TournamentPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-black text-white font-display">
-              eFootball City Cup 2025
+              eFootball City Cup 2026
             </h1>
             <p className="text-gray-500 text-sm mt-1">
               {tournament?.status === "IN_PROGRESS"

@@ -21,7 +21,7 @@ export function AdminHeader({ user }: { user: Session["user"] }) {
         >
           <span className="text-xs text-gray-600 hidden sm:block">Tournament Management</span>
           <span className="text-xs text-gray-600 hidden sm:block">•</span>
-          <span className="text-xs font-semibold text-gray-400">eFootball City Cup 2025</span>
+          <span className="text-xs font-semibold text-gray-400">eFootball City Cup 2026</span>
         </motion.div>
       </div>
 

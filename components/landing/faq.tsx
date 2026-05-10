@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: "When does the tournament start?",
-    a: "The eFootball City Cup 2025 kicks off on May 11, 2025. Make sure you register before then to secure your spot. Registration closes once the bracket is generated.",
+    a: "The eFootball City Cup 2026 kicks off on May 11, 2026. Make sure you register before then to secure your spot. Registration closes once the bracket is generated.",
   },
   {
     q: "What are the prizes?",

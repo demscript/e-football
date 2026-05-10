@@ -66,7 +66,7 @@ const sponsors = ["LEVEL UP GAMING", "ARENA PRO", "DIGITAL CLASH", "APEX GEAR", 
 
 export default async function HomePage() {
   const playerCount = await getPlayerCount();
-  const tournamentDate = new Date("2025-05-11T10:00:00Z");
+  const tournamentDate = new Date("2026-05-11T10:00:00Z");
 
   return (
     <main className="min-h-screen bg-dark-900 overflow-hidden">
@@ -160,7 +160,7 @@ export default async function HomePage() {
             TOURNAMENT STARTS IN
           </div>
           <Countdown targetDate={tournamentDate} />
-          <p className="mt-6 text-gray-500 text-sm">May 11, 2025 • 10:00 AM</p>
+          <p className="mt-6 text-gray-500 text-sm">May 11, 2026 • 10:00 AM</p>
         </div>
       </section>
 
@@ -202,7 +202,7 @@ export default async function HomePage() {
               <span className="block gradient-text-yellow">eFootball Event</span>
             </h2>
             <p className="text-gray-400 leading-relaxed mb-6">
-              The eFootball City Cup 2025 is a community-organised, locally-run tournament for passionate gamers. This is NOT an official Konami or eFootball event — it&apos;s built by the community, for the community.
+              The eFootball City Cup 2026 is a community-organised, locally-run tournament for passionate gamers. This is NOT an official Konami or eFootball event — it&apos;s built by the community, for the community.
             </p>
             <p className="text-gray-400 leading-relaxed mb-8">
               Whether you&apos;re a weekend warrior or a serious competitor, this is your chance to prove your skills, earn bragging rights, and take home real cash prizes.
@@ -321,7 +321,7 @@ export default async function HomePage() {
               <Trophy className="w-3 h-3 text-white" />
             </div>
             <span className="font-bold text-gray-400 font-display text-sm">
-              eFOOTBALL<span className="text-brand-yellow">CUP</span> 2025
+              eFOOTBALL<span className="text-brand-yellow">CUP</span> 2026
             </span>
           </div>
           <p className="text-xs text-gray-600 text-center">
@@ -337,6 +337,14 @@ export default async function HomePage() {
             <Link href="/login" className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
               Admin
             </Link>
+            <a
+              href="https://twitter.com/demscript"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-gray-600 hover:text-brand-blue-light transition-colors"
+            >
+              Designed by <span className="font-semibold">Demscript</span>
+            </a>
           </div>
         </div>
       </footer>

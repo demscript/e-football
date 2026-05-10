@@ -79,7 +79,7 @@ export default function RegisterPage() {
             Join the Tournament
           </h1>
           <p className="mt-2 text-gray-400">
-            Register now to compete in the eFootball City Cup 2025
+            Register now to compete in the eFootball City Cup 2026
           </p>
           <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-semibold">
             <CheckCircle className="w-3.5 h-3.5" />
@@ -149,7 +149,7 @@ export default function RegisterPage() {
                 <li>Follow all tournament rules and regulations</li>
                 <li>Accept the admin&apos;s decisions as final</li>
                 <li>Play fair and maintain sportsmanship</li>
-                <li>Be available on the tournament date (May 11, 2025)</li>
+                <li>Be available on the tournament date (May 11, 2026)</li>
               </ul>
             </div>
 

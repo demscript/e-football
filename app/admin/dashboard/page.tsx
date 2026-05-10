@@ -66,7 +66,7 @@ export default async function DashboardPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-black text-white font-display">Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">eFootball City Cup 2025 — Tournament Control</p>
+          <p className="text-gray-500 text-sm mt-1">eFootball City Cup 2026 — Tournament Control</p>
         </div>
         <TournamentStatusBadge status={data.tournament?.status ?? "UPCOMING"} />
       </div>

@@ -74,7 +74,7 @@ export default function LoginPage() {
               <Trophy className="w-8 h-8 text-brand-blue-light" />
             </div>
             <h1 className="text-2xl font-black text-white font-display">Admin Portal</h1>
-            <p className="text-gray-500 text-sm mt-1">eFootball City Cup 2025</p>
+            <p className="text-gray-500 text-sm mt-1">eFootball City Cup 2026</p>
           </div>
 
           {/* Card */}

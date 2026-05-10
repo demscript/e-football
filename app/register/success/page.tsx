@@ -59,7 +59,7 @@ function SuccessContent() {
           transition={{ delay: 0.3 }}
           className="text-gray-400 mb-8"
         >
-          Welcome to the eFootball City Cup 2025,{" "}
+          Welcome to the eFootball City Cup 2026,{" "}
           <span className="text-white font-semibold">{gamerTag}</span>! 🎮
         </motion.p>
 
@@ -98,7 +98,7 @@ function SuccessContent() {
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-gray-500">Tournament Date</span>
-              <span className="text-white font-semibold">May 11, 2025</span>
+              <span className="text-white font-semibold">May 11, 2026</span>
             </div>
           </div>
         </motion.div>

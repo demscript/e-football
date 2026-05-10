@@ -52,7 +52,7 @@ export function HeroSection({
           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
           REGISTRATION NOW OPEN
           <span className="text-gray-500">•</span>
-          MAY 11, 2025
+          MAY 11, 2026
         </motion.div>
 
         {/* Title */}
@@ -67,7 +67,7 @@ export function HeroSection({
           <br />
           <span className="gradient-text-yellow neon-yellow">CITY CUP</span>
           <br />
-          <span className="text-brand-blue-light neon-text">2025</span>
+          <span className="text-brand-blue-light neon-text">2026</span>
         </motion.h1>
 
         {/* Subtitle */}
