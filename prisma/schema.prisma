@@ -1,0 +1,199 @@
+// Prisma Schema for eFootball Tournament Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  role          Role      @default(ADMIN)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+}
+
+// ─── Player Registration ───────────────────────────────────────────────────────
+
+model Player {
+  id            String          @id @default(cuid())
+  playerId      String          @unique // e.g. EFB-001
+  fullName      String
+  gamerTag      String          @unique
+  phone         String          @unique
+  email         String?
+  console       ConsoleType
+  status        PlayerStatus    @default(PENDING)
+  seedNumber    Int?            // for bracket seeding
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  matchesAsP1   Match[]         @relation("Player1Matches")
+  matchesAsP2   Match[]         @relation("Player2Matches")
+  wonMatches    Match[]         @relation("MatchWinner")
+  incidents     Incident[]
+
+  @@map("players")
+}
+
+enum ConsoleType {
+  PS4
+  PS5
+  PC
+  MOBILE
+}
+
+enum PlayerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DISQUALIFIED
+}
+
+// ─── Tournament ────────────────────────────────────────────────────────────────
+
+model Tournament {
+  id            String            @id @default(cuid())
+  name          String
+  status        TournamentStatus  @default(UPCOMING)
+  currentRound  Int               @default(0)
+  totalRounds   Int               @default(0)
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  rounds        Round[]
+  matches       Match[]
+
+  @@map("tournaments")
+}
+
+enum TournamentStatus {
+  UPCOMING
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  IN_PROGRESS
+  PAUSED
+  COMPLETED
+}
+
+// ─── Rounds ───────────────────────────────────────────────────────────────────
+
+model Round {
+  id            String      @id @default(cuid())
+  tournamentId  String
+  roundNumber   Int
+  name          String      // "Round of 32", "Quarter Final", etc.
+  status        RoundStatus @default(PENDING)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  tournament    Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  matches       Match[]
+
+  @@unique([tournamentId, roundNumber])
+  @@map("rounds")
+}
+
+enum RoundStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+// ─── Matches ──────────────────────────────────────────────────────────────────
+
+model Match {
+  id            String      @id @default(cuid())
+  tournamentId  String
+  roundId       String
+  matchNumber   Int
+  player1Id     String?
+  player2Id     String?
+  winnerId      String?
+  score1        Int?
+  score2        Int?
+  status        MatchStatus @default(PENDING)
+  isBye         Boolean     @default(false)
+  scheduledAt   DateTime?
+  completedAt   DateTime?
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  tournament    Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  round         Round       @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  player1       Player?     @relation("Player1Matches", fields: [player1Id], references: [id])
+  player2       Player?     @relation("Player2Matches", fields: [player2Id], references: [id])
+  winner        Player?     @relation("MatchWinner", fields: [winnerId], references: [id])
+  incidents     Incident[]
+
+  @@unique([roundId, matchNumber])
+  @@map("matches")
+}
+
+enum MatchStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  WALKOVER
+  DISPUTED
+}
+
+// ─── Incidents ────────────────────────────────────────────────────────────────
+
+model Incident {
+  id            String          @id @default(cuid())
+  matchId       String
+  playerId      String?
+  type          IncidentType
+  description   String
+  resolution    String?
+  createdAt     DateTime        @default(now())
+
+  match         Match           @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player        Player?         @relation(fields: [playerId], references: [id])
+
+  @@map("incidents")
+}
+
+enum IncidentType {
+  DISCONNECT
+  REPEATED_DISCONNECT
+  DISPUTE
+  TECHNICAL_ISSUE
+  OTHER
+}
+
+// ─── Audit Logs ───────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
