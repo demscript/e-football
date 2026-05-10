@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Trophy, CheckCircle, Copy, ArrowLeft, Zap } from "lucide-react";
+import { Trophy, CheckCircle, Copy, ArrowLeft, Zap, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -129,6 +129,26 @@ function SuccessContent() {
             </li>
           </ul>
         </motion.div>
+
+        {/* WhatsApp CTA */}
+        <motion.a
+          href="https://chat.whatsapp.com/EJBpbO9w4aNI4L6L0GbG48?mode=gi_t"
+          target="_blank"
+          rel="noopener noreferrer"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="flex items-center gap-3 rounded-xl bg-[#25D366]/10 border border-[#25D366]/30 hover:bg-[#25D366]/20 hover:border-[#25D366]/50 p-4 mb-6 transition-all group"
+        >
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#25D366]/20 flex items-center justify-center">
+            <MessageCircle className="w-5 h-5 text-[#25D366]" />
+          </div>
+          <div className="text-left flex-1">
+            <p className="text-sm font-bold text-white">Join the WhatsApp Group</p>
+            <p className="text-xs text-gray-400">Get updates, match schedules &amp; announcements</p>
+          </div>
+          <span className="text-[#25D366] text-xs font-semibold group-hover:underline">Join →</span>
+        </motion.a>
 
         {/* Actions */}
         <motion.div
