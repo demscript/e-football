@@ -12,15 +12,8 @@ import {
   ArrowLeft, CheckCircle, ChevronRight,
 } from "lucide-react";
 import { registrationSchema, type RegistrationInput } from "@/lib/validations";
-import { Input, Select } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-const CONSOLE_OPTIONS = [
-  { value: "PS5", label: "PlayStation 5 (PS5)" },
-  { value: "PS4", label: "PlayStation 4 (PS4)" },
-  { value: "PC", label: "PC / Computer" },
-  { value: "MOBILE", label: "Mobile Phone" },
-];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -144,15 +137,6 @@ export default function RegisterPage() {
               icon={<Mail className="w-4 h-4" />}
               error={errors.email?.message}
               {...register("email")}
-            />
-
-            <Select
-              label="Console Type"
-              placeholder="Select your console..."
-              options={CONSOLE_OPTIONS}
-              error={errors.console?.message}
-              required
-              {...register("console")}
             />
 
             {/* Rules acknowledgment */}

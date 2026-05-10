@@ -19,9 +19,7 @@ export const registrationSchema = z.object({
     .email("Enter a valid email address")
     .optional()
     .or(z.literal("")),
-  console: z.enum(["PS4", "PS5", "PC", "MOBILE"], {
-    required_error: "Please select your console type",
-  }),
+  console: z.enum(["PS4", "PS5", "PC", "MOBILE"]).default("MOBILE"),
 });
 
 export const loginSchema = z.object({
