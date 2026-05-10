@@ -8,7 +8,7 @@ import {
   Search, CheckCircle, XCircle, Trash2, Edit,
   Filter, ChevronDown, ShieldX,
 } from "lucide-react";
-import type { Player } from "@prisma/client";
+import type { Player } from "@/generated/prisma";
 import { Badge, ConsoleBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";

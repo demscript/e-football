@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { shuffle, nextPowerOf2, getRoundName } from "@/lib/utils";
-import type { Player } from "@prisma/client";
+import type { Player } from "../generated/prisma";
 
 export async function generateBracket(tournamentId: string) {
   const approvedPlayers = await prisma.player.findMany({

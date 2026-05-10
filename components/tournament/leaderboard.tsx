@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Medal, Award } from "lucide-react";
-import type { Player, Tournament, Match } from "@prisma/client";
+import type { Player, Tournament, Match } from "@/generated/prisma";
 import { cn } from "@/lib/utils";
 import { getPusherClient, CHANNELS, EVENTS } from "@/lib/pusher";
 import { ConsoleBadge, Badge } from "@/components/ui/badge";

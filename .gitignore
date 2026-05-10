@@ -33,3 +33,6 @@ next-env.d.ts
 # Prisma
 prisma/migrations/dev.db
 env
+
+# Generated Prisma client (built at deploy time)
+generated/

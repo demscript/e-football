@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Swords, Trophy, ChevronDown, AlertCircle } from "lucide-react";
-import type { Match, Player, Round } from "@prisma/client";
+import type { Match, Player, Round } from "@/generated/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";

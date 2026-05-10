@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Swords, ChevronRight, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
-import type { Match, Player, Round, Tournament } from "@prisma/client";
+import type { Match, Player, Round, Tournament } from "@/generated/prisma";
 import { cn, getRoundName } from "@/lib/utils";
 import { getPusherClient, CHANNELS, EVENTS } from "@/lib/pusher";
 import type { MatchUpdatedEvent } from "@/types";

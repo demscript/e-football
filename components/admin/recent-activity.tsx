@@ -1,4 +1,4 @@
-import type { Player } from "@prisma/client";
+import type { Player } from "@/generated/prisma";
 import { Badge, ConsoleBadge } from "@/components/ui/badge";
 import { timeAgo } from "@/lib/utils";
 
