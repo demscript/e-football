@@ -16,11 +16,28 @@ export async function POST(req: NextRequest) {
     if (!tournament) return NextResponse.json({ error: "No tournament found" }, { status: 404 });
 
     if (scope === "all") {
-      // Reset every match in every round
-      await prisma.match.updateMany({
-        where: { round: { tournamentId: tournament.id } },
-        data: { status: "PENDING", winnerId: null, score1: null, score2: null, notes: null },
+      const round1 = tournament.rounds.find((r) => r.roundNumber === 1);
+
+      // Delete every round beyond Round 1 (cascades to their matches automatically)
+      await prisma.round.deleteMany({
+        where: {
+          tournamentId: tournament.id,
+          roundNumber: { gt: 1 },
+        },
       });
+
+      // Reset Round 1 matches to PENDING
+      if (round1) {
+        await prisma.match.updateMany({
+          where: { roundId: round1.id },
+          data: { status: "PENDING", winnerId: null, score1: null, score2: null, notes: null },
+        });
+
+        await prisma.round.update({
+          where: { id: round1.id },
+          data: { status: "IN_PROGRESS" },
+        });
+      }
 
       // Reset tournament back to round 1
       await prisma.tournament.update({
@@ -28,23 +45,17 @@ export async function POST(req: NextRequest) {
         data: { currentRound: 1, status: "IN_PROGRESS" },
       });
 
-      // Reset all rounds to IN_PROGRESS
-      await prisma.round.updateMany({
-        where: { tournamentId: tournament.id },
-        data: { status: "IN_PROGRESS" },
-      });
-
       await prisma.auditLog.create({
         data: {
           userId: session.user?.id ?? "",
-          action: "ALL scores reset — full tournament reset",
+          action: "FULL reset — all generated rounds deleted, Round 1 restored",
           entity: "Tournament",
           entityId: tournament.id,
           metadata: { scope: "all", reason: "Admin initiated full reset" },
         },
       });
 
-      return NextResponse.json({ message: "All scores reset successfully", affected: "all rounds" });
+      return NextResponse.json({ message: "Full reset complete. Only Round 1 remains.", affected: "all rounds" });
     }
 
     // Reset current round only
