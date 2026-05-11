@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { Swords, Trophy, ChevronDown, AlertCircle } from "lucide-react";
+import { Swords, Trophy, ChevronDown, RotateCcw } from "lucide-react";
 import type { Match, Player, Round } from "@/generated/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ export function MatchList({ byRound }: MatchListProps) {
   const [winnerId, setWinnerId] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(Object.keys(byRound)[0] ?? null);
 
   async function submitScore() {
@@ -48,6 +49,25 @@ export function MatchList({ byRound }: MatchListProps) {
       toast.error(err instanceof Error ? err.message : "Error");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function resetMatch(matchId: string) {
+    if (!confirm("Reset this match result back to PENDING?")) return;
+    setResetting(matchId);
+    try {
+      const res = await fetch(`/api/matches/${matchId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reset: true }),
+      });
+      if (!res.ok) throw new Error("Failed to reset match");
+      toast.success("Match reset to pending");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error");
+    } finally {
+      setResetting(null);
     }
   }
 
@@ -105,6 +125,7 @@ export function MatchList({ byRound }: MatchListProps) {
                     <MatchRow
                       key={match.id}
                       match={match}
+                      resetting={resetting === match.id}
                       onScore={() => {
                         setScoreModal(match);
                         setScore1(match.score1 ?? 0);
@@ -112,6 +133,7 @@ export function MatchList({ byRound }: MatchListProps) {
                         setWinnerId(match.winnerId ?? "");
                         setNotes(match.notes ?? "");
                       }}
+                      onReset={() => resetMatch(match.id)}
                     />
                   ))}
                 </motion.div>
@@ -220,9 +242,13 @@ export function MatchList({ byRound }: MatchListProps) {
 function MatchRow({
   match,
   onScore,
+  onReset,
+  resetting,
 }: {
   match: MatchWithRelations;
   onScore: () => void;
+  onReset: () => void;
+  resetting: boolean;
 }) {
   const isDone = match.status === "COMPLETED" || match.status === "WALKOVER";
 
@@ -271,10 +297,22 @@ function MatchRow({
         </Button>
       )}
 
-      {isDone && match.winner && (
-        <div className="flex items-center gap-1.5 text-xs text-brand-yellow font-semibold">
-          <Trophy className="w-3.5 h-3.5" />
-          {match.winner.gamerTag}
+      {isDone && (
+        <div className="flex items-center gap-2">
+          {match.winner && (
+            <div className="flex items-center gap-1.5 text-xs text-brand-yellow font-semibold">
+              <Trophy className="w-3.5 h-3.5" />
+              {match.winner.gamerTag}
+            </div>
+          )}
+          <button
+            onClick={onReset}
+            disabled={resetting}
+            title="Reset match result"
+            className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-400/10 transition-all disabled:opacity-40"
+          >
+            <RotateCcw className={cn("w-3.5 h-3.5", resetting && "animate-spin")} />
+          </button>
         </div>
       )}
     </div>

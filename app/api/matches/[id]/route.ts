@@ -14,7 +14,26 @@ export async function PATCH(
   const { id } = await params;
 
   try {
-    const { score1, score2, winnerId, notes } = await req.json();
+    const body = await req.json();
+
+    // Reset match back to pending
+    if (body.reset) {
+      const match = await prisma.match.update({
+        where: { id },
+        data: { status: "PENDING", winnerId: null, score1: null, score2: null, notes: null },
+      });
+      await prisma.auditLog.create({
+        data: {
+          userId: session.user?.id ?? "",
+          action: "Match reset to pending",
+          entity: "Match",
+          entityId: id,
+        },
+      });
+      return NextResponse.json({ data: match });
+    }
+
+    const { score1, score2, winnerId, notes } = body;
 
     if (!winnerId) {
       return NextResponse.json({ error: "Winner is required" }, { status: 400 });
