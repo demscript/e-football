@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Swords, ChevronRight, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { Trophy, Swords, ZoomIn, ZoomOut, Maximize2, Crown, Flame } from "lucide-react";
 import type { Match, Player, Round, Tournament } from "@/generated/prisma";
 import { cn, getRoundName } from "@/lib/utils";
 import { getPusherClient, CHANNELS, EVENTS } from "@/lib/pusher";
@@ -17,30 +17,37 @@ interface BracketViewProps {
   isAdmin?: boolean;
 }
 
+const AVATAR_COLORS = [
+  "from-blue-500 to-blue-700",
+  "from-purple-500 to-purple-700",
+  "from-pink-500 to-pink-700",
+  "from-orange-500 to-orange-700",
+  "from-teal-500 to-teal-700",
+  "from-red-500 to-red-700",
+  "from-green-500 to-green-700",
+  "from-yellow-500 to-yellow-700",
+];
+
+function getAvatarColor(tag: string) {
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 export function BracketView({ tournament, isAdmin }: BracketViewProps) {
   const [zoom, setZoom] = useState(1);
   const [liveMatches, setLiveMatches] = useState<Record<string, Partial<MatchWithPlayers>>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Realtime updates
   useEffect(() => {
     const pusher = getPusherClient();
     const channel = pusher.subscribe(CHANNELS.MATCHES);
-
     channel.bind(EVENTS.MATCH_UPDATED, (data: MatchUpdatedEvent) => {
-      setLiveMatches((prev) => ({
-        ...prev,
-        [data.match.id]: data.match,
-      }));
+      setLiveMatches((prev) => ({ ...prev, [data.match.id]: data.match }));
     });
-
-    return () => {
-      channel.unbind_all();
-      pusher.unsubscribe(CHANNELS.MATCHES);
-    };
+    return () => { channel.unbind_all(); pusher.unsubscribe(CHANNELS.MATCHES); };
   }, []);
 
-  // Merge live updates with static data
   const rounds = tournament.rounds.map((round) => ({
     ...round,
     matches: round.matches.map((match) => ({
@@ -54,76 +61,89 @@ export function BracketView({ tournament, isAdmin }: BracketViewProps) {
     (sum, r) => sum + r.matches.filter((m) => m.status === "COMPLETED" || m.status === "WALKOVER").length,
     0
   );
-
   const champion = rounds.at(-1)?.matches[0]?.winner;
+
+  const roundColors = [
+    "from-blue-500/20 to-blue-600/5 border-blue-500/30 text-blue-400",
+    "from-purple-500/20 to-purple-600/5 border-purple-500/30 text-purple-400",
+    "from-pink-500/20 to-pink-600/5 border-pink-500/30 text-pink-400",
+    "from-orange-500/20 to-orange-600/5 border-orange-500/30 text-orange-400",
+    "from-yellow-500/20 to-yellow-600/5 border-yellow-500/30 text-yellow-400",
+  ];
 
   return (
     <div className="space-y-4">
-      {/* Bracket header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-dark-700 border border-dark-500 text-xs text-gray-400">
-            <span className="font-semibold text-white">{completedMatches}</span>/{totalMatches} matches
+      {/* Stats bar */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-dark-800 border border-dark-500">
+            <Swords className="w-4 h-4 text-brand-blue-light" />
+            <span className="text-sm font-bold text-white">{completedMatches}</span>
+            <span className="text-xs text-gray-500">/ {totalMatches} played</span>
           </div>
           {champion && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand-yellow/10 border border-brand-yellow/30 text-xs">
-              <Trophy className="w-3.5 h-3.5 text-brand-yellow" />
-              <span className="text-brand-yellow font-bold">{champion.gamerTag}</span>
-              <span className="text-gray-500">— Champion</span>
-            </div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-yellow/10 border border-brand-yellow/40"
+              style={{ boxShadow: "0 0 20px rgba(255,215,0,0.15)" }}
+            >
+              <Crown className="w-4 h-4 text-brand-yellow" />
+              <span className="text-sm font-black text-brand-yellow">{champion.gamerTag}</span>
+              <span className="text-xs text-gray-500">Champion</span>
+            </motion.div>
           )}
         </div>
 
-        {/* Zoom controls */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))}
-            className="p-2 rounded-lg bg-dark-700 border border-dark-500 text-gray-400 hover:text-white hover:border-dark-400 transition-all"
-          >
+        {/* Zoom */}
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-dark-800 border border-dark-600">
+          <button onClick={() => setZoom((z) => Math.max(0.4, z - 0.1))} className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-all">
             <ZoomOut className="w-4 h-4" />
           </button>
-          <span className="text-xs text-gray-500 w-12 text-center">{Math.round(zoom * 100)}%</span>
-          <button
-            onClick={() => setZoom((z) => Math.min(1.5, z + 0.1))}
-            className="p-2 rounded-lg bg-dark-700 border border-dark-500 text-gray-400 hover:text-white hover:border-dark-400 transition-all"
-          >
+          <span className="text-xs text-gray-500 w-10 text-center font-mono">{Math.round(zoom * 100)}%</span>
+          <button onClick={() => setZoom((z) => Math.min(1.5, z + 0.1))} className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-all">
             <ZoomIn className="w-4 h-4" />
           </button>
-          <button
-            onClick={() => setZoom(1)}
-            className="p-2 rounded-lg bg-dark-700 border border-dark-500 text-gray-400 hover:text-white hover:border-dark-400 transition-all"
-          >
+          <button onClick={() => setZoom(1)} className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-all">
             <Maximize2 className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Scrollable bracket container */}
+      {/* Bracket canvas */}
       <div
         ref={containerRef}
-        className="overflow-x-auto overflow-y-auto rounded-2xl border border-dark-400/50 bg-dark-900/80"
-        style={{ minHeight: 400, maxHeight: "75vh" }}
+        className="overflow-auto rounded-2xl border border-dark-500/60 bg-dark-900"
+        style={{ minHeight: 480, maxHeight: "78vh", background: "radial-gradient(ellipse at top, #0a0f1e 0%, #050709 100%)" }}
       >
+        {/* Grid overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-5"
+          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)", backgroundSize: "40px 40px" }}
+        />
+
         <div
-          style={{ transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.2s" }}
-          className="p-8 inline-flex gap-0 items-start min-w-max"
+          style={{ transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.2s ease" }}
+          className="p-10 inline-flex gap-0 items-start min-w-max"
         >
           {rounds.map((round, roundIdx) => (
-            <div key={round.id} className="flex flex-col">
+            <div key={round.id} className="flex flex-col items-center">
               {/* Round label */}
-              <div className="text-center mb-4 px-6">
-                <span className="inline-block px-3 py-1 rounded-full bg-dark-700 border border-dark-500 text-xs font-bold text-gray-400 uppercase tracking-wider">
+              <div className="mb-6 px-4">
+                <div className={cn(
+                  "px-4 py-1.5 rounded-full border bg-gradient-to-r text-xs font-black uppercase tracking-widest",
+                  roundColors[roundIdx % roundColors.length]
+                )}>
                   {round.name}
-                </span>
+                </div>
               </div>
 
-              {/* Matches column */}
+              {/* Matches */}
               <div
                 className="flex flex-col"
                 style={{
-                  gap: `${Math.pow(2, roundIdx) * 24}px`,
-                  paddingTop: `${Math.pow(2, roundIdx) * 12 - 12}px`,
-                  paddingBottom: `${Math.pow(2, roundIdx) * 12 - 12}px`,
+                  gap: `${Math.pow(2, roundIdx) * 28}px`,
+                  paddingTop: `${Math.pow(2, roundIdx) * 14 - 14}px`,
+                  paddingBottom: `${Math.pow(2, roundIdx) * 14 - 14}px`,
                 }}
               >
                 {round.matches.map((match, matchIdx) => (
@@ -142,24 +162,23 @@ export function BracketView({ tournament, isAdmin }: BracketViewProps) {
             </div>
           ))}
 
-          {/* Champion display */}
+          {/* Champion slot */}
           {champion && (
-            <div className="flex flex-col justify-center pl-8">
-              <div className="text-center mb-4">
-                <span className="inline-block px-3 py-1 rounded-full bg-brand-yellow/10 border border-brand-yellow/30 text-xs font-bold text-brand-yellow uppercase tracking-wider">
-                  Champion
-                </span>
+            <div className="flex flex-col items-center justify-center pl-6 self-center">
+              <div className="mb-4 text-xs font-black uppercase tracking-widest text-brand-yellow">
+                🏆 Champion
               </div>
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", delay: 0.5 }}
-                className="w-48 p-4 rounded-2xl border-2 border-brand-yellow/60 bg-brand-yellow/10 text-center"
-                style={{ boxShadow: "0 0 30px rgba(255,215,0,0.2)" }}
+                transition={{ type: "spring", delay: 0.6, stiffness: 200 }}
+                className="w-52 p-5 rounded-2xl border-2 border-brand-yellow/60 text-center relative overflow-hidden"
+                style={{ background: "linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,165,0,0.05))", boxShadow: "0 0 40px rgba(255,215,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)" }}
               >
-                <Trophy className="w-8 h-8 text-brand-yellow mx-auto mb-2" />
-                <div className="font-black text-brand-yellow text-lg font-display">{champion.gamerTag}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{champion.fullName}</div>
+                <div className="absolute inset-0 bg-gradient-to-b from-brand-yellow/10 to-transparent pointer-events-none" />
+                <Crown className="w-10 h-10 text-brand-yellow mx-auto mb-3 drop-shadow-lg" />
+                <div className="font-black text-brand-yellow text-xl font-display tracking-wide">{champion.gamerTag}</div>
+                <div className="text-xs text-gray-400 mt-1">{champion.fullName}</div>
               </motion.div>
             </div>
           )}
@@ -167,15 +186,15 @@ export function BracketView({ tournament, isAdmin }: BracketViewProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+      <div className="flex flex-wrap gap-4 text-xs text-gray-500 px-1">
         {[
-          { color: "bg-brand-yellow/30 border-brand-yellow/50", label: "Winner / Advancing" },
-          { color: "bg-brand-blue/20 border-brand-blue/40", label: "In Progress" },
-          { color: "bg-dark-600 border-dark-500", label: "Pending" },
-          { color: "bg-red-500/10 border-red-500/30", label: "Eliminated" },
+          { dot: "bg-brand-yellow", label: "Winner" },
+          { dot: "bg-brand-blue animate-pulse", label: "Live" },
+          { dot: "bg-dark-500", label: "Pending" },
+          { dot: "bg-red-500/50", label: "Eliminated" },
         ].map((item) => (
           <div key={item.label} className="flex items-center gap-1.5">
-            <div className={cn("w-3 h-3 rounded border", item.color)} />
+            <div className={cn("w-2 h-2 rounded-full", item.dot)} />
             <span>{item.label}</span>
           </div>
         ))}
@@ -205,58 +224,81 @@ function BracketMatch({
 
   return (
     <div className="relative flex items-center">
-      {/* Match card */}
       <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: roundIdx * 0.1 + matchIdx * 0.05 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: roundIdx * 0.08 + matchIdx * 0.04, duration: 0.4 }}
         className={cn(
-          "w-44 rounded-xl border overflow-hidden transition-all duration-300",
-          isCompleted
-            ? "border-dark-400/60 bg-dark-700/80"
-            : isInProgress
-            ? "border-brand-blue/40 bg-brand-blue/5"
-            : "border-dark-500/60 bg-dark-800/60",
-          "hover:border-dark-300/70"
+          "w-52 rounded-2xl border overflow-hidden relative transition-all duration-300",
+          isInProgress
+            ? "border-brand-blue/60 shadow-[0_0_20px_rgba(0,87,255,0.25)]"
+            : isCompleted
+            ? "border-dark-400/40"
+            : "border-dark-500/50",
         )}
-        style={isInProgress ? { boxShadow: "0 0 15px rgba(0,87,255,0.15)" } : {}}
+        style={{
+          background: isInProgress
+            ? "linear-gradient(135deg, rgba(0,87,255,0.08), rgba(0,40,120,0.06))"
+            : "linear-gradient(135deg, rgba(255,255,255,0.03), rgba(0,0,0,0.2))",
+        }}
       >
-        {/* Match number */}
-        <div className="flex items-center justify-between px-3 py-1.5 border-b border-dark-600/60">
-          <span className="text-[10px] text-gray-600 font-mono">#{match.matchNumber}</span>
+        {/* Top accent line */}
+        <div className={cn(
+          "h-0.5 w-full",
+          isInProgress ? "bg-gradient-to-r from-brand-blue via-brand-blue-light to-transparent" :
+          isCompleted ? "bg-gradient-to-r from-brand-yellow/40 to-transparent" :
+          "bg-gradient-to-r from-dark-500 to-transparent"
+        )} />
+
+        {/* Match header */}
+        <div className="flex items-center justify-between px-3 pt-2 pb-1">
+          <span className="text-[10px] text-gray-600 font-mono font-semibold">M{match.matchNumber}</span>
           {isInProgress && (
-            <div className="flex items-center gap-1 text-[10px] text-brand-blue-light font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-blue animate-pulse" />
-              LIVE
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-blue/20 border border-brand-blue/30">
+              <Flame className="w-2.5 h-2.5 text-brand-blue-light" />
+              <span className="text-[9px] text-brand-blue-light font-black tracking-wider">LIVE</span>
             </div>
           )}
           {match.isBye && (
-            <span className="text-[10px] text-gray-600 font-semibold">BYE</span>
+            <span className="text-[9px] text-gray-600 font-bold bg-dark-600 px-2 py-0.5 rounded-full">BYE</span>
+          )}
+          {isCompleted && !match.isBye && (
+            <span className="text-[9px] text-green-500/70 font-bold">DONE</span>
           )}
         </div>
 
-        {/* Player slots */}
-        <PlayerSlot
-          player={match.player1}
-          isWinner={match.winnerId === match.player1?.id}
-          isEliminated={isCompleted && match.winnerId !== match.player1?.id && !!match.player1}
-          score={match.score1}
-          isBye={match.isBye && !match.player1}
-        />
-        <div className="h-px bg-dark-600/60" />
-        <PlayerSlot
-          player={match.player2}
-          isWinner={match.winnerId === match.player2?.id}
-          isEliminated={isCompleted && match.winnerId !== match.player2?.id && !!match.player2}
-          score={match.score2}
-          isBye={match.isBye && !match.player2}
-        />
+        {/* Players */}
+        <div className="px-2 pb-2 space-y-1.5">
+          <PlayerSlot
+            player={match.player1}
+            isWinner={match.winnerId === match.player1?.id}
+            isEliminated={isCompleted && match.winnerId !== match.player1?.id && !!match.player1}
+            score={match.score1}
+            isBye={match.isBye && !match.player1}
+          />
+
+          {/* VS divider */}
+          <div className="flex items-center gap-2 px-1">
+            <div className="flex-1 h-px bg-dark-600/80" />
+            <span className="text-[9px] font-black text-gray-600 tracking-widest">VS</span>
+            <div className="flex-1 h-px bg-dark-600/80" />
+          </div>
+
+          <PlayerSlot
+            player={match.player2}
+            isWinner={match.winnerId === match.player2?.id}
+            isEliminated={isCompleted && match.winnerId !== match.player2?.id && !!match.player2}
+            score={match.score2}
+            isBye={match.isBye && !match.player2}
+          />
+        </div>
       </motion.div>
 
-      {/* Connector line */}
+      {/* Connector */}
       {!isLast && (
-        <div className="w-8 flex items-center">
-          <div className="w-full h-px bg-gradient-to-r from-dark-500 to-transparent" />
+        <div className="w-10 flex items-center relative">
+          <div className="w-full h-px bg-gradient-to-r from-dark-400 to-transparent" />
+          <div className="absolute right-0 w-1.5 h-1.5 rounded-full bg-dark-400" />
         </div>
       )}
     </div>
@@ -278,48 +320,57 @@ function PlayerSlot({
 }) {
   if (isBye || !player) {
     return (
-      <div className="px-3 py-2 flex items-center gap-2 opacity-30">
-        <div className="w-5 h-5 rounded bg-dark-600" />
+      <div className="flex items-center gap-2 px-2 py-2 rounded-xl bg-dark-800/40 border border-dark-600/30 opacity-25">
+        <div className="w-7 h-7 rounded-lg bg-dark-600 flex items-center justify-center">
+          <span className="text-[9px] text-gray-600">—</span>
+        </div>
         <span className="text-xs text-gray-600">{isBye ? "BYE" : "TBD"}</span>
       </div>
     );
   }
 
+  const initials = player.gamerTag.slice(0, 2).toUpperCase();
+  const avatarColor = getAvatarColor(player.gamerTag);
+
   return (
     <div
       className={cn(
-        "px-3 py-2 flex items-center gap-2 transition-all",
-        isWinner && "bg-brand-yellow/10",
-        isEliminated && "opacity-40"
+        "flex items-center gap-2 px-2 py-2 rounded-xl border transition-all duration-300",
+        isWinner
+          ? "bg-gradient-to-r from-brand-yellow/15 to-brand-yellow/5 border-brand-yellow/40 shadow-[0_0_10px_rgba(255,215,0,0.1)]"
+          : isEliminated
+          ? "bg-dark-800/20 border-dark-700/30 opacity-35"
+          : "bg-dark-800/50 border-dark-600/40 hover:border-dark-500/60"
       )}
     >
-      <div
-        className={cn(
-          "w-5 h-5 rounded flex items-center justify-center text-[9px] font-black flex-shrink-0",
-          isWinner ? "bg-brand-yellow/20 text-brand-yellow" : "bg-dark-600 text-gray-500"
-        )}
-      >
-        {player.gamerTag.slice(0, 2).toUpperCase()}
+      {/* Avatar */}
+      <div className={cn(
+        "w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black flex-shrink-0 bg-gradient-to-br text-white shadow-sm",
+        isWinner ? "from-yellow-400 to-orange-500" : avatarColor
+      )}>
+        {initials}
       </div>
-      <span
-        className={cn(
-          "text-xs font-semibold flex-1 truncate",
-          isWinner ? "text-brand-yellow" : isEliminated ? "text-gray-600" : "text-gray-300"
-        )}
-      >
+
+      {/* Name */}
+      <span className={cn(
+        "text-xs font-bold flex-1 truncate",
+        isWinner ? "text-brand-yellow" : isEliminated ? "text-gray-600" : "text-gray-200"
+      )}>
         {player.gamerTag}
       </span>
-      {score !== null && score !== undefined && (
-        <span
-          className={cn(
-            "text-xs font-black min-w-[16px] text-right",
+
+      {/* Score + icon */}
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        {score !== null && score !== undefined && (
+          <span className={cn(
+            "text-sm font-black min-w-[18px] text-right tabular-nums",
             isWinner ? "text-brand-yellow" : "text-gray-500"
-          )}
-        >
-          {score}
-        </span>
-      )}
-      {isWinner && <Trophy className="w-3 h-3 text-brand-yellow flex-shrink-0" />}
+          )}>
+            {score}
+          </span>
+        )}
+        {isWinner && <Trophy className="w-3 h-3 text-brand-yellow drop-shadow-sm" />}
+      </div>
     </div>
   );
 }
