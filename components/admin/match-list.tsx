@@ -9,6 +9,7 @@ import type { Match, Player, Round } from "@/generated/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { PinModal } from "@/components/admin/pin-modal";
 import { cn } from "@/lib/utils";
 
 type MatchWithRelations = Match & { player1: Player | null; player2: Player | null; winner: Player | null; round: Round };
@@ -28,6 +29,7 @@ export function MatchList({ byRound }: MatchListProps) {
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(Object.keys(byRound)[0] ?? null);
+  const [pinOpen, setPinOpen] = useState(false);
 
   async function submitScore() {
     if (!scoreModal || !winnerId) {
@@ -143,6 +145,14 @@ export function MatchList({ byRound }: MatchListProps) {
         })}
       </div>
 
+      {/* PIN verification modal */}
+      <PinModal
+        open={pinOpen}
+        onClose={() => setPinOpen(false)}
+        onSuccess={submitScore}
+        action="record match result"
+      />
+
       {/* Score Modal */}
       <Modal
         open={!!scoreModal}
@@ -224,7 +234,7 @@ export function MatchList({ byRound }: MatchListProps) {
             </div>
 
             <div className="flex gap-3">
-              <Button onClick={submitScore} loading={loading} className="flex-1" variant="yellow">
+              <Button onClick={() => setPinOpen(true)} loading={loading} className="flex-1" variant="yellow">
                 <Trophy className="w-4 h-4" />
                 Save Result
               </Button>

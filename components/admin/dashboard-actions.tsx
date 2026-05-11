@@ -7,6 +7,7 @@ import {
   Shuffle, ChevronRight, Play, Pause, RotateCcw, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PinModal } from "@/components/admin/pin-modal";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -28,6 +29,8 @@ export function DashboardActions({
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pinPending, setPinPending] = useState<{ key: string; fn: () => Promise<void>; label: string } | null>(null);
 
   async function apiCall(endpoint: string, method = "POST", body?: object) {
     const res = await fetch(endpoint, {
@@ -50,6 +53,17 @@ export function DashboardActions({
     } finally {
       setLoading(null);
     }
+  }
+
+  function requirePin(key: string, label: string, fn: () => Promise<void>) {
+    setPinPending({ key, fn, label });
+    setPinOpen(true);
+  }
+
+  async function onPinSuccess() {
+    if (!pinPending) return;
+    await handleAction(pinPending.key, pinPending.fn);
+    setPinPending(null);
   }
 
   const canGenerate =
@@ -112,12 +126,28 @@ export function DashboardActions({
     },
   ];
 
+  const PIN_PROTECTED = new Set(["generate", "advance"]);
+
   return (
+    <>
+    <PinModal
+      open={pinOpen}
+      onClose={() => { setPinOpen(false); setPinPending(null); }}
+      onSuccess={onPinSuccess}
+      action={pinPending?.label ?? "this action"}
+    />
     <div className="space-y-2">
       {actions.map((action) => (
         <button
           key={action.key}
-          onClick={() => !action.disabled && handleAction(action.key, action.fn)}
+          onClick={() => {
+            if (action.disabled) return;
+            if (PIN_PROTECTED.has(action.key)) {
+              requirePin(action.key, action.label, action.fn);
+            } else {
+              handleAction(action.key, action.fn);
+            }
+          }}
           disabled={action.disabled || loading === action.key}
           className={cn(
             "w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all duration-200",
@@ -151,5 +181,6 @@ export function DashboardActions({
         </button>
       ))}
     </div>
+    </>
   );
 }
