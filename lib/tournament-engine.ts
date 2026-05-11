@@ -186,6 +186,24 @@ export async function recordMatchResult(
   winnerId: string,
   notes?: string
 ) {
+  // Security: fetch match first to verify winnerId is an actual participant
+  const existing = await prisma.match.findUnique({
+    where: { id: matchId },
+    select: { player1Id: true, player2Id: true },
+  });
+
+  if (!existing) throw new Error("Match not found");
+
+  const validIds = [existing.player1Id, existing.player2Id].filter(Boolean);
+  if (!validIds.includes(winnerId)) {
+    throw new Error("Winner must be one of the match participants");
+  }
+
+  // Strip any HTML/script tags from notes before persisting
+  const safeNotes = notes
+    ? notes.replace(/<[^>]*>/g, "").slice(0, 500).trim() || undefined
+    : undefined;
+
   const match = await prisma.match.update({
     where: { id: matchId },
     data: {
@@ -194,7 +212,7 @@ export async function recordMatchResult(
       winnerId,
       status: "COMPLETED",
       completedAt: new Date(),
-      notes,
+      notes: safeNotes,
     },
     include: { player1: true, player2: true, winner: true },
   });

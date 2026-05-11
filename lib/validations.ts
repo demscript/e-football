@@ -30,8 +30,9 @@ export const loginSchema = z.object({
 export const scoreSchema = z.object({
   score1: z.number().int().min(0).max(20),
   score2: z.number().int().min(0).max(20),
-  winnerId: z.string(),
-  notes: z.string().optional(),
+  // winnerId must be a non-empty cuid — validated server-side against match participants
+  winnerId: z.string().min(1, "Winner is required"),
+  notes: z.string().max(500).optional(),
 });
 
 export const incidentSchema = z.object({
