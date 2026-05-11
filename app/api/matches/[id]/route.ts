@@ -18,6 +18,40 @@ export async function PATCH(
   try {
     const body = await req.json();
 
+    // Assign a player to an empty slot (TBD)
+    if (body.assignPlayer) {
+      const { slot, playerId } = body.assignPlayer as { slot: "player1" | "player2"; playerId: string };
+
+      if (!["player1", "player2"].includes(slot)) {
+        return NextResponse.json({ error: "Invalid slot — must be player1 or player2" }, { status: 400 });
+      }
+
+      // Verify player exists and is APPROVED
+      const player = await prisma.player.findUnique({ where: { id: playerId } });
+      if (!player) return NextResponse.json({ error: "Player not found" }, { status: 404 });
+      if (player.status !== "APPROVED") {
+        return NextResponse.json({ error: "Player must be APPROVED before being assigned" }, { status: 400 });
+      }
+
+      const fieldKey = slot === "player1" ? "player1Id" : "player2Id";
+      const updated = await prisma.match.update({
+        where: { id },
+        data: { [fieldKey]: playerId, isBye: false, status: "PENDING" },
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          userId: session.user?.id ?? "",
+          action: `Player assigned to ${slot} slot`,
+          entity: "Match",
+          entityId: id,
+          metadata: { playerId, gamerTag: player.gamerTag, slot },
+        },
+      });
+
+      return NextResponse.json({ data: updated });
+    }
+
     // Reset match back to pending
     if (body.reset) {
       const match = await prisma.match.update({

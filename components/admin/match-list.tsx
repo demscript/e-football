@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { Swords, Trophy, ChevronDown, RotateCcw } from "lucide-react";
+import { Swords, Trophy, ChevronDown, RotateCcw, UserPlus } from "lucide-react";
 import type { Match, Player, Round } from "@/generated/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,12 @@ export function MatchList({ byRound }: MatchListProps) {
   const [resetting, setResetting] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(Object.keys(byRound)[0] ?? null);
   const [pinOpen, setPinOpen] = useState(false);
+
+  // Assign-player state
+  const [assignModal, setAssignModal] = useState<{ matchId: string; slot: "player1" | "player2" } | null>(null);
+  const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState("");
 
   async function submitScore() {
     if (!scoreModal || !winnerId) {
@@ -70,6 +76,38 @@ export function MatchList({ byRound }: MatchListProps) {
       toast.error(err instanceof Error ? err.message : "Error");
     } finally {
       setResetting(null);
+    }
+  }
+
+  async function openAssignModal(matchId: string, slot: "player1" | "player2") {
+    setSelectedPlayerId("");
+    setAssignModal({ matchId, slot });
+    // Fetch all approved players to pick from
+    const res = await fetch("/api/players?status=APPROVED");
+    const data = await res.json();
+    setAvailablePlayers(data.data ?? []);
+  }
+
+  async function submitAssign() {
+    if (!assignModal || !selectedPlayerId) return;
+    setAssignLoading(true);
+    try {
+      const res = await fetch(`/api/matches/${assignModal.matchId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignPlayer: { slot: assignModal.slot, playerId: selectedPlayerId } }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Failed to assign player");
+      }
+      toast.success("Player assigned!");
+      setAssignModal(null);
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error");
+    } finally {
+      setAssignLoading(false);
     }
   }
 
@@ -136,6 +174,7 @@ export function MatchList({ byRound }: MatchListProps) {
                         setNotes(match.notes ?? "");
                       }}
                       onReset={() => resetMatch(match.id)}
+                      onAssign={(slot) => openAssignModal(match.id, slot)}
                     />
                   ))}
                 </motion.div>
@@ -144,6 +183,50 @@ export function MatchList({ byRound }: MatchListProps) {
           );
         })}
       </div>
+
+      {/* Assign Player Modal */}
+      <Modal
+        open={!!assignModal}
+        onClose={() => setAssignModal(null)}
+        title="Assign Player to TBD Slot"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-400">
+            Slot: <span className="text-white font-semibold capitalize">{assignModal?.slot}</span>
+          </p>
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 mb-2">Select Approved Player</label>
+            <select
+              value={selectedPlayerId}
+              onChange={(e) => setSelectedPlayerId(e.target.value)}
+              className="w-full bg-dark-600 border border-dark-400 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-blue/50"
+            >
+              <option value="">— choose a player —</option>
+              {availablePlayers.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.gamerTag} ({p.fullName})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              onClick={submitAssign}
+              loading={assignLoading}
+              disabled={!selectedPlayerId}
+              className="flex-1"
+              variant="yellow"
+            >
+              <UserPlus className="w-4 h-4" />
+              Assign
+            </Button>
+            <Button variant="secondary" onClick={() => setAssignModal(null)} className="flex-1">
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* PIN verification modal */}
       <PinModal
@@ -253,27 +336,42 @@ function MatchRow({
   match,
   onScore,
   onReset,
+  onAssign,
   resetting,
 }: {
   match: MatchWithRelations;
   onScore: () => void;
   onReset: () => void;
+  onAssign: (slot: "player1" | "player2") => void;
   resetting: boolean;
 }) {
   const isDone = match.status === "COMPLETED" || match.status === "WALKOVER";
+  const missingP1 = !match.player1;
+  const missingP2 = !match.player2;
 
   return (
     <div className="px-6 py-4 flex items-center gap-4 hover:bg-dark-700/20 transition-colors">
       <div className="text-xs text-gray-600 font-mono w-8">#{match.matchNumber}</div>
 
       <div className="flex-1 flex items-center gap-3">
-        <div className="flex-1 text-right">
-          <span className={cn(
-            "font-semibold text-sm",
-            match.winnerId === match.player1Id ? "text-brand-yellow" : "text-gray-400"
-          )}>
-            {match.player1?.gamerTag ?? "BYE"}
-          </span>
+        {/* Player 1 */}
+        <div className="flex-1 text-right flex items-center justify-end gap-2">
+          {missingP1 && !isDone ? (
+            <button
+              onClick={() => onAssign("player1")}
+              className="flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 border border-orange-400/30 hover:border-orange-400/60 rounded-lg px-2 py-1 transition-all bg-orange-400/5"
+            >
+              <UserPlus className="w-3 h-3" />
+              TBD
+            </button>
+          ) : (
+            <span className={cn(
+              "font-semibold text-sm",
+              match.winnerId === match.player1Id ? "text-brand-yellow" : "text-gray-400"
+            )}>
+              {match.player1?.gamerTag ?? "BYE"}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2 min-w-[80px] justify-center">
@@ -286,13 +384,24 @@ function MatchRow({
           )}
         </div>
 
-        <div className="flex-1">
-          <span className={cn(
-            "font-semibold text-sm",
-            match.winnerId === match.player2Id ? "text-brand-yellow" : "text-gray-400"
-          )}>
-            {match.player2?.gamerTag ?? "BYE"}
-          </span>
+        {/* Player 2 */}
+        <div className="flex-1 flex items-center gap-2">
+          {missingP2 && !isDone ? (
+            <button
+              onClick={() => onAssign("player2")}
+              className="flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 border border-orange-400/30 hover:border-orange-400/60 rounded-lg px-2 py-1 transition-all bg-orange-400/5"
+            >
+              <UserPlus className="w-3 h-3" />
+              TBD
+            </button>
+          ) : (
+            <span className={cn(
+              "font-semibold text-sm",
+              match.winnerId === match.player2Id ? "text-brand-yellow" : "text-gray-400"
+            )}>
+              {match.player2?.gamerTag ?? "BYE"}
+            </span>
+          )}
         </div>
       </div>
 
