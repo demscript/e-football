@@ -123,44 +123,45 @@ export function BracketView({ tournament, isAdmin }: BracketViewProps) {
 
         <div
           style={{ transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.2s ease" }}
-          className="p-10 inline-flex gap-0 items-start min-w-max"
+          className="p-8 space-y-8 min-w-max"
         >
-          {rounds.map((round, roundIdx) => (
-            <div key={round.id} className="flex flex-col items-center">
-              {/* Round label */}
-              <div className="mb-6 px-4">
-                <div className={cn(
-                  "px-4 py-1.5 rounded-full border bg-gradient-to-r text-xs font-black uppercase tracking-widest",
-                  roundColors[roundIdx % roundColors.length]
-                )}>
-                  {round.name}
+          {rounds.map((round, roundIdx) => {
+            const cols = round.matches.length >= 6 ? 2 : 1;
+            return (
+              <div key={round.id}>
+                {/* Round label */}
+                <div className="mb-5 flex items-center gap-3">
+                  <div className={cn(
+                    "px-4 py-1.5 rounded-full border bg-gradient-to-r text-xs font-black uppercase tracking-widest",
+                    roundColors[roundIdx % roundColors.length]
+                  )}>
+                    {round.name}
+                  </div>
+                  <div className="h-px flex-1 bg-gradient-to-r from-dark-500 to-transparent" />
+                  <span className="text-xs text-gray-600 font-mono">{round.matches.length} matches</span>
+                </div>
+
+                {/* Matches grid */}
+                <div
+                  className="grid gap-3"
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+                >
+                  {round.matches.map((match, matchIdx) => (
+                    <BracketMatch
+                      key={match.id}
+                      match={match}
+                      isLast={roundIdx === rounds.length - 1}
+                      isFirst={roundIdx === 0}
+                      matchIdx={matchIdx}
+                      roundIdx={roundIdx}
+                      totalRounds={rounds.length}
+                      isAdmin={isAdmin}
+                    />
+                  ))}
                 </div>
               </div>
-
-              {/* Matches */}
-              <div
-                className="flex flex-col"
-                style={{
-                  gap: `${Math.pow(2, roundIdx) * 28}px`,
-                  paddingTop: `${Math.pow(2, roundIdx) * 14 - 14}px`,
-                  paddingBottom: `${Math.pow(2, roundIdx) * 14 - 14}px`,
-                }}
-              >
-                {round.matches.map((match, matchIdx) => (
-                  <BracketMatch
-                    key={match.id}
-                    match={match}
-                    isLast={roundIdx === rounds.length - 1}
-                    isFirst={roundIdx === 0}
-                    matchIdx={matchIdx}
-                    roundIdx={roundIdx}
-                    totalRounds={rounds.length}
-                    isAdmin={isAdmin}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Champion slot */}
           {champion && (
@@ -223,7 +224,7 @@ function BracketMatch({
   const isInProgress = match.status === "IN_PROGRESS";
 
   return (
-    <div className="relative flex items-center">
+    <div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -294,13 +295,6 @@ function BracketMatch({
         </div>
       </motion.div>
 
-      {/* Connector */}
-      {!isLast && (
-        <div className="w-10 flex items-center relative">
-          <div className="w-full h-px bg-gradient-to-r from-dark-400 to-transparent" />
-          <div className="absolute right-0 w-1.5 h-1.5 rounded-full bg-dark-400" />
-        </div>
-      )}
     </div>
   );
 }
