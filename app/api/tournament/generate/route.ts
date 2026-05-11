@@ -42,10 +42,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ data: result, message: "Bracket generated!" });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to generate bracket" },
-      { status: 500 }
-    );
+    // EFB-010: never leak ORM/schema details
+    console.error("[generate]", err);
+    const msg = err instanceof Error ? err.message : "";
+    const safe = msg.includes("approved") || msg.includes("players") ? msg : "Failed to generate bracket";
+    return NextResponse.json({ error: safe }, { status: 500 });
   }
 }

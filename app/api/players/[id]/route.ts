@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { pusherServer, CHANNELS, EVENTS } from "@/lib/pusher";
+import { z } from "zod";
+import { ZodError } from "zod";
+
+// EFB-006: same validation rules as registration POST
+const playerPatchSchema = z.object({
+  status: z.enum(["PENDING", "APPROVED", "REJECTED", "DISQUALIFIED"]).optional(),
+  fullName: z
+    .string()
+    .min(2)
+    .max(100)
+    .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, hyphens and apostrophes")
+    .optional(),
+  gamerTag: z
+    .string()
+    .min(2)
+    .max(20)
+    .regex(/^[a-zA-Z0-9_-]+$/, "Gamer tag can only contain letters, numbers, underscores and hyphens")
+    .optional(),
+});
 
 async function getSession() {
   return auth();
@@ -18,7 +37,23 @@ export async function PATCH(
 
   try {
     const body = await req.json();
-    const { status, fullName, gamerTag } = body;
+
+    // EFB-006/EFB-007: validate and allowlist writable fields
+    let parsed: z.infer<typeof playerPatchSchema>;
+    try {
+      parsed = playerPatchSchema.parse({
+        status: body.status,
+        fullName: body.fullName,
+        gamerTag: body.gamerTag,
+      });
+    } catch (err) {
+      if (err instanceof ZodError) {
+        return NextResponse.json({ error: err.errors[0]?.message ?? "Invalid data" }, { status: 400 });
+      }
+      throw err;
+    }
+
+    const { status, fullName, gamerTag } = parsed;
 
     const updateData: Record<string, string> = {};
     if (status) updateData.status = status;

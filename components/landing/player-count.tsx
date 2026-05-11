@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users } from "lucide-react";
-import { getPusherClient, CHANNELS, EVENTS } from "@/lib/pusher";
+import { getPusherClient, CHANNELS, EVENTS } from "@/lib/pusher-client";
 import type { PlayerRegisteredEvent } from "@/types";
 
 export function LivePlayerCount({ initial }: { initial: number }) {

@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Trophy, Swords, ZoomIn, ZoomOut, Maximize2, Crown, Flame } from "lucide-react";
 import type { Match, Player, Round, Tournament } from "@/generated/prisma";
 import { cn, getRoundName } from "@/lib/utils";
-import { getPusherClient, CHANNELS, EVENTS } from "@/lib/pusher";
+import { getPusherClient, CHANNELS, EVENTS } from "@/lib/pusher-client";
 import type { MatchUpdatedEvent } from "@/types";
 
 type MatchWithPlayers = Match & { player1: Player | null; player2: Player | null; winner: Player | null };

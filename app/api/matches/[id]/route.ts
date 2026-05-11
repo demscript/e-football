@@ -69,6 +69,15 @@ export async function PATCH(
       return NextResponse.json({ data: match });
     }
 
+    // EFB-004: Block score recording on already-COMPLETED matches (immutability)
+    const existing = await prisma.match.findUnique({ where: { id }, select: { status: true } });
+    if (existing?.status === "COMPLETED" || existing?.status === "WALKOVER") {
+      return NextResponse.json(
+        { error: "Match is already completed. Use the reset button first to re-record." },
+        { status: 409 }
+      );
+    }
+
     // Validate with schema — rejects unknown shapes, enforces score ranges
     let parsed: { score1: number; score2: number; winnerId: string; notes?: string };
     try {

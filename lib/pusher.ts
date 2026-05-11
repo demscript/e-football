@@ -1,7 +1,8 @@
+// EFB-012: server-only — never import this in client components or pages
+// Use @/lib/pusher-client for browser-side Pusher access
+import "server-only";
 import Pusher from "pusher";
-import PusherJS from "pusher-js";
 
-// Server-side Pusher instance
 export const pusherServer = new Pusher({
   appId: process.env.PUSHER_APP_ID!,
   key: process.env.PUSHER_KEY!,
@@ -10,26 +11,12 @@ export const pusherServer = new Pusher({
   useTLS: true,
 });
 
-// Client-side Pusher instance (singleton)
-let pusherClient: PusherJS | null = null;
-
-export function getPusherClient(): PusherJS {
-  if (!pusherClient) {
-    pusherClient = new PusherJS(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-    });
-  }
-  return pusherClient;
-}
-
-// Channel names
 export const CHANNELS = {
   TOURNAMENT: "tournament",
   PLAYERS: "players",
   MATCHES: "matches",
 } as const;
 
-// Event names
 export const EVENTS = {
   PLAYER_REGISTERED: "player-registered",
   PLAYER_STATUS_CHANGED: "player-status-changed",

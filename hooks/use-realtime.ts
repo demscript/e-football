@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
-import { getPusherClient, CHANNELS, EVENTS } from "@/lib/pusher";
+import { getPusherClient, CHANNELS, EVENTS } from "@/lib/pusher-client";
 import type { PlayerRegisteredEvent, MatchUpdatedEvent, TournamentUpdatedEvent } from "@/types";
 
 export function useRealtimePlayers(onUpdate: (event: PlayerRegisteredEvent) => void) {

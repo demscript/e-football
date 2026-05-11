@@ -34,9 +34,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ data: result });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to advance round" },
-      { status: 500 }
-    );
+    // EFB-010: never leak ORM/schema details — log server-side only
+    console.error("[advance]", err);
+    const msg = err instanceof Error ? err.message : "Failed to advance round";
+    // Only expose safe business-logic messages (no Prisma internals)
+    const safe = msg.includes("pending") || msg.includes("not found") || msg.includes("complete") ? msg : "Failed to advance round";
+    return NextResponse.json({ error: safe }, { status: 500 });
   }
 }
