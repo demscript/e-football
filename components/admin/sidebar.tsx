@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard, Users, Swords, Trophy, Activity,
-  LogOut, Menu, X, FileText, Settings,
+  LogOut, Menu, X, FileText, Settings, ShieldAlert,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
@@ -18,6 +18,7 @@ const navItems = [
   { href: "/admin/bracket", label: "Bracket", icon: Trophy },
   { href: "/admin/logs", label: "Audit Logs", icon: FileText },
   { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: "/admin/reset", label: "Score Reset", icon: ShieldAlert },
 ];
 
 function NavLink({ item, active }: { item: (typeof navItems)[0]; active: boolean }) {
